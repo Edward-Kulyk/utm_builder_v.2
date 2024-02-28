@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTM Link Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"] {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        #utm-link, copyButton, list {
+            display: block;
+            margin-top: 16px;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .error-message {
+            text-align: center;
+            color: red;
+            font-weight: bold;
+        }
+        .view-button{
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        a:hover, button:hover {
+            background-color: #45a049;
+                    a:hover, button:hover {
+            background-color: #45a049;
+        }
+
+            .copy-button {
+            cursor: pointer;
+            margin-left: 5px; /* Adjust the margin as needed */
+            float: right; /* Align to the right */
+            text-decoration: none;
+        }
+
+        .copy-button img {
+            width: 16px !important; /* Adjust the width as needed */
+            height: 16px !important; /* Adjust the height as needed */
+            background-color: transparent !important;
+        }
+
+
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+    <script>
+        function toggleOtherInput(selectId, inputId) {
+            var selectElement = document.getElementById(selectId);
+            var inputElement = document.getElementById(inputId);
+
+            if (selectElement.value === 'other') {
+                inputElement.style.display = 'inline';
+                inputElement.required = true;
+            } else {
+                inputElement.style.display = 'none';
+                inputElement.required = false;
+            }
+
+            updateUtmLink();  // Call the function to update UTM link when the input changes
+        }
+
+        function updateUtmLink() {
+            var url = getSelectedValue('url', 'url_other');
+            var campaignContent = getSelectedValue('campaign_content', 'campaign_content_other');
+            var campaignSource = getSelectedValue('campaign_source', 'campaign_source_other');
+            var campaignMedium = getSelectedValue('campaign_medium', 'campaign_medium_other');
+            var campaignName = getSelectedValue('campaign_name', 'campaign_name_other');
+            var domain = document.getElementById('domain').value;
+            var slug = document.getElementById('slug').value;
+
+            // Construct the UTM link
+             var dynamicUtmLink = `${url}?utm_campaign=${campaignName.replace(/ /g, '+')}&utm_medium=${campaignMedium.replace(/ /g, '+')}&utm_source=${campaignSource.replace(/ /g, '+')}&utm_content=${campaignContent.replace(/ /g, '+')}`;
+
+            // Display the UTM link
+            document.getElementById('utm-link').innerText = dynamicUtmLink;
+        }
+
+        function getSelectedValue(selectId, inputId) {
+            var selectElement = document.getElementById(selectId);
+            var inputElement = document.getElementById(inputId);
+
+            if (selectElement.value === 'other') {
+                return inputElement.value || 'other';
+            } else {
+                return selectElement.value;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>UTM Link Builder</h1>
+    {% if error_message %}
+        <div class="error-message" style="color: red; font-weight: bold;">{{ error_message }}</div>
+    {% endif %}
+    <form method="post" action="/" oninput="updateUtmLink()">
+        <label for="url">URL:</label>
+        <select name="url" id="url" onchange="toggleOtherInput('url', 'url_other')" required>
+          <option value="" disabled selected>Select or Enter url</option>
+            {% for id in unique_url %}
+                <option value="{{ id[0] }}">{{ id[0] }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select>
+        <input type="text" name="url_other" id="url_other" placeholder="Enter new value" style="display: none;"><br>
+
+        <label for="campaign_source">Campaign Source:</label>
+        <select name="campaign_source" id="campaign_source" onchange="toggleOtherInput('campaign_source', 'campaign_source_other')" required>
+            <option value="" disabled selected>Select or Enter Campaign Source</option>
+            {% for source in unique_campaign_sources %}
+                <option value="{{ source[0] }}">{{ source[0] }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select>
+        <input type="text" name="campaign_source_other" id="campaign_source_other" placeholder="Enter new value" style="display: none;"><br>
+
+        <label for="campaign_medium">Campaign Medium:</label>
+        <select name="campaign_medium" id="campaign_medium" onchange="toggleOtherInput('campaign_medium', 'campaign_medium_other')" required>
+            <option value="" disabled selected>Select or Enter Campaign Medium</option>
+            {% for medium in unique_campaign_mediums %}
+                <option value="{{ medium[0] }}">{{ medium[0] }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select>
+        <input type="text" name="campaign_medium_other" id="campaign_medium_other" placeholder="Enter new value" style="display: none;"><br>
+
+        <label for="campaign_name">Campaign Name:</label>
+        <select name="campaign_name" id="campaign_name" onchange="toggleOtherInput('campaign_name', 'campaign_name_other')" required>
+            <option value="" disabled selected>Select or Enter Campaign Name</option>
+            {% for name in unique_campaign_names %}
+                <option value="{{ name[0] }}">{{ name[0] }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select>
+
+        <input type="text" name="campaign_name_other" id="campaign_name_other" placeholder="Enter new value" style="display: none;"><br>
+                <label for="campaign_content">Campaign content:</label>
+        <select name="campaign_content" id="campaign_content" onchange="toggleOtherInput('campaign_content', 'campaign_content_other')">
+          <option value="" disabled selected>Select or Enter Campaign ID</option>
+            {% for id in unique_campaign_contents %}
+                <option value="{{ id[0] }}">{{ id[0] }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select>
+        <input type="text" name="campaign_content_other" id="campaign_content_other" placeholder="Enter new value" style="display: none;"><br>
+
+        <label for="domain">Domain:</label>
+        <select name="domain" id="domain">
+            <option value="asus.click">asus.click</option>
+            <option value="rog.gg">rog.gg</option>
+        </select><br>
+
+        <label for="slug">Slug:</label>
+        <input type="text" name="slug" id="slug"><br>
+
+        <label>UTM Link:</label>
+        <span id="utm-link"></span><br>
+        <script>
+            // Initialize ClipboardJS
+            new ClipboardJS('#copyButton');
+        </script>
+        <input type="submit" value="Generate UTM Link">
+        <a class="view-button" href="{{ url_for('campaigns') }}">View links</a>
+        {% if short_url %}
+            <div id="copyButtonContainer">
+            <p>Generated Short Link: <a href="{{ short_url }}" target="_blank" id="shortLink">{{ short_url }}</a></p><span class="copy-button" id="copyButton" data-clipboard-target="#shortLink">
+                <img width="30px" src="{{ url_for('static', filename='images/copy.png') }}" alt="Copy">
+            </span>
+            </div>
+        {% endif %}
+    </form>
+</body>
+</html>
